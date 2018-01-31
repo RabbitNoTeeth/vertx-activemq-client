@@ -50,5 +50,8 @@ dependencies {
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    compile 'io.vertx:vertx-web:3.4.2'
+    compile 'io.vertx:vertx-core:3.4.2'
+    compile 'org.apache.activemq:activemq-client:5.15.0'
+    compile 'org.apache.activemq:activemq-broker:5.15.0'
+    compile 'io.vertx:vertx-kafka-client:3.4.1'
 }
