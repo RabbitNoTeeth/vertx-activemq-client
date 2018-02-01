@@ -22,12 +22,15 @@ class ActiveMQConsumerImpl(private val vertx: Vertx, private val session: Sessio
                 val consumer = this.consumer.get()
                 if(consumer == null){
                     val newConsumer = session.createConsumer(queue)
-                    this.consumer.compareAndSet(null,newConsumer)
-                    newConsumer.setMessageListener {
-                        when(it){
-                            is ActiveMQTextMessage -> future.complete(JsonObject.mapFrom(it.text))
-                            else -> future.fail(IllegalStateException("only support ActiveMQTextMessage type"))
+                    if(this.consumer.compareAndSet(null,newConsumer)){
+                        newConsumer.setMessageListener {
+                            when(it){
+                                is ActiveMQTextMessage -> future.complete(JsonObject.mapFrom(it.text))
+                                else -> future.fail(IllegalStateException("only support ActiveMQTextMessage type"))
+                            }
                         }
+                    }else{
+                        newConsumer.close()
                     }
                 }
             }catch (e: Exception){
