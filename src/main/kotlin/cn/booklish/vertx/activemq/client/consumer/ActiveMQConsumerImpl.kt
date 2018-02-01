@@ -14,21 +14,21 @@ class ActiveMQConsumerImpl(private val vertx: Vertx, private val session: Sessio
 
     private val queue = session.createQueue(destination)
 
-    private var consumer: AtomicReference<MessageConsumer> = AtomicReference()
+    private var consumerRef: AtomicReference<MessageConsumer> = AtomicReference()
 
     override fun listen(messageHandler: Handler<AsyncResult<JsonObject>>) {
         vertx.executeBlocking(Handler<Future<JsonObject>>{
             try{
-                val consumer = this.consumer.get()
+                val consumer = this.consumerRef.get()
                 if(consumer == null){
                     val newConsumer = session.createConsumer(queue)
-                    if(this.consumer.compareAndSet(null,newConsumer)){
+                    if(this.consumerRef.compareAndSet(null,newConsumer)){
                         newConsumer.setMessageListener {
                             messageHandler.handle(Future.succeededFuture(JsonObject((it as ActiveMQTextMessage).text)))
                         }
                     }else{
                         newConsumer.close()
-                        messageHandler.handle(Future.failedFuture(IllegalStateException("${this.consumer.get()} had started, you should " +
+                        messageHandler.handle(Future.failedFuture(IllegalStateException("${this.consumerRef.get()} had started, you should " +
                                 "not call this method more than one time!")))
                     }
                 }else{
@@ -42,9 +42,9 @@ class ActiveMQConsumerImpl(private val vertx: Vertx, private val session: Sessio
     }
 
     override fun close() {
-        val consumer = this.consumer.get()
+        val consumer = this.consumerRef.get()
         if(consumer != null){
-            if(this.consumer.compareAndSet(consumer, null)){
+            if(this.consumerRef.compareAndSet(consumer, null)){
                 consumer.close()
             }
         }
