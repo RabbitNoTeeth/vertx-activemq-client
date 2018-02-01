@@ -1,7 +1,16 @@
 package cn.booklish.vertx.activemq.client.subscriber
 
-/**
- * Created by Administrator on 2018/2/1.
- */
+import io.vertx.core.AsyncResult
+import io.vertx.core.Handler
+import io.vertx.core.json.JsonObject
+
+
 interface ActiveMQSubscriber {
+
+    fun listen(messageHandler: Handler<AsyncResult<JsonObject>>)
+
+    fun close()
+
+    fun close(handler: Handler<AsyncResult<Void>>)
+
 }

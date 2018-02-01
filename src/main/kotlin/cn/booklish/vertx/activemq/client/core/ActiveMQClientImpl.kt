@@ -6,6 +6,7 @@ import cn.booklish.vertx.activemq.client.pool.ActiveMQSessionPool
 import cn.booklish.vertx.activemq.client.producer.ActiveMQProducer
 import cn.booklish.vertx.activemq.client.producer.ActiveMQProducerImpl
 import cn.booklish.vertx.activemq.client.subscriber.ActiveMQSubscriber
+import cn.booklish.vertx.activemq.client.subscriber.ActiveMQSubscriberImpl
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -30,7 +31,7 @@ class ActiveMQClientImpl(private val vertx: Vertx, config: JsonObject):ActiveMQC
     }
 
     override fun createSubscriber(destination: String): ActiveMQSubscriber {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return ActiveMQSubscriberImpl(vertx,sessionPool.getSession(),destination)
     }
 
     override fun createProducer(destinationType: DestinationType,destination: String): ActiveMQProducer {
