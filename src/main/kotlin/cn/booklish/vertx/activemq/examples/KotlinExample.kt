@@ -20,6 +20,8 @@ fun main(args: Array<String>) {
     // create a client
     val activemqClient = ActiveMQClient.create(vertx,config)
 
+    //------------------ queue ---------------------
+
     // get a consumer of queue
     val consumer = activemqClient.createConsumer("vertx-test-queue")
 
@@ -32,12 +34,11 @@ fun main(args: Array<String>) {
         }
     })
 
-
-    // get a producer
+    // get a producer of queue
     val producer = activemqClient.createProducer(DestinationType.QUEUE,"vertx-test-queue")
 
     // send a message
-    val message = JsonObject().put("msg", "this is a test message!")
+    val message = JsonObject().put("msg", "this is a test queue message!")
     producer.send(message, Handler {
         if (it.succeeded()) {
             println("send successful!")
@@ -45,6 +46,37 @@ fun main(args: Array<String>) {
             it.cause().printStackTrace()
         }
     })
+
+    //------------------ topic ---------------------
+
+    // get a subscriber of topic
+    val subscriber = activemqClient.createSubscriber("vertx-test-topic")
+
+    // start the consumer
+    subscriber.listen(Handler {
+        if(it.succeeded()){
+            println("subscriber - receive:"+it.result())
+        }else{
+            it.cause().printStackTrace()
+        }
+    })
+
+    // get a producer of topic
+    val producer2 = activemqClient.createProducer(DestinationType.TOPIC,"vertx-test-topic")
+
+    // send a message
+    val message2 = JsonObject().put("msg", "this is a test topic message!")
+    producer2.send(message2, Handler {
+        if (it.succeeded()) {
+            println("send successful!")
+        } else {
+            it.cause().printStackTrace()
+        }
+    })
+
+
+
+
 
 
 }
