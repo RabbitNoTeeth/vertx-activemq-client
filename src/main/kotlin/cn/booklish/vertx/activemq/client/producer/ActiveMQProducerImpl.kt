@@ -12,14 +12,14 @@ import javax.jms.MessageProducer
 import javax.jms.Session
 
 
-class ActiveMQProducerImpl(private val vertx: Vertx, private val session: Session, destinationType: DestinationType, destination: String):ActiveMQProducer {
+class ActiveMQProducerImpl(private val vertx: Vertx, session: Session, destinationType: DestinationType, destination: String):ActiveMQProducer {
 
-    private val destination = when(destinationType){
+    private val destinationBean = when(destinationType){
         DestinationType.QUEUE -> session.createQueue(destination)
         DestinationType.TOPIC -> session.createTopic(destination)
     }
 
-    private val producer = AtomicReference<MessageProducer>()
+    private val producer = session.createProducer(destinationBean)
 
     override fun send(message: JsonObject) {
         this.send(message,null)
@@ -28,18 +28,9 @@ class ActiveMQProducerImpl(private val vertx: Vertx, private val session: Sessio
     override fun send(message: JsonObject, handler: Handler<AsyncResult<Void>>?) {
         vertx.executeBlocking(Handler { future ->
             try{
-                var producer = this.producer.get()
-                if(producer == null){
-                    val newProducer = session.createProducer(destination)
-                    if(this.producer.compareAndSet(null,newProducer)){
-                        producer = newProducer
-                    }else{
-                        newProducer.close()
-                    }
-                }
                 val textMessage = ActiveMQTextMessage()
                 textMessage.text = message.toString()
-                producer.send(textMessage)
+                this.producer.send(textMessage)
                 future.complete()
             }catch (e:Exception){
                 future.fail(e)
@@ -48,11 +39,7 @@ class ActiveMQProducerImpl(private val vertx: Vertx, private val session: Sessio
     }
 
     override fun close() {
-        val producer = this.producer.get()
-        if(producer != null){
-            producer.close()
-            this.producer.compareAndSet(producer, null)
-        }
+        this.producer.close()
     }
 
     override fun close(handler: Handler<AsyncResult<Void>>) {
