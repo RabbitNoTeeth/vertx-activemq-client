@@ -17,33 +17,36 @@ class ActiveMQConsumerImpl(private val vertx: Vertx, private val session: Sessio
     private var consumer: AtomicReference<MessageConsumer> = AtomicReference()
 
     override fun listen(messageHandler: Handler<AsyncResult<JsonObject>>) {
-        vertx.executeBlocking(Handler{ future ->
+        vertx.executeBlocking(Handler<Future<JsonObject>>{
             try{
                 val consumer = this.consumer.get()
                 if(consumer == null){
                     val newConsumer = session.createConsumer(queue)
                     if(this.consumer.compareAndSet(null,newConsumer)){
                         newConsumer.setMessageListener {
-                            when(it){
-                                is ActiveMQTextMessage -> future.complete(JsonObject.mapFrom(it.text))
-                                else -> future.fail(IllegalStateException("only support ActiveMQTextMessage type"))
-                            }
+                            messageHandler.handle(Future.succeededFuture(JsonObject((it as ActiveMQTextMessage).text)))
                         }
                     }else{
                         newConsumer.close()
+                        messageHandler.handle(Future.failedFuture(IllegalStateException("${this.consumer.get()} had started, you should " +
+                                "not call this method more than one time!")))
                     }
+                }else{
+                    messageHandler.handle(Future.failedFuture(IllegalStateException("$consumer had started, you should " +
+                            "not call this method more than one time!")))
                 }
             }catch (e: Exception){
-                future.fail(e)
+                messageHandler.handle(Future.failedFuture(e))
             }
-        }, messageHandler)
+        }, null)
     }
 
     override fun close() {
         val consumer = this.consumer.get()
         if(consumer != null){
-            consumer.close()
-            this.consumer.compareAndSet(consumer, null)
+            if(this.consumer.compareAndSet(consumer, null)){
+                consumer.close()
+            }
         }
     }
 
