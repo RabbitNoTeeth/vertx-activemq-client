@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonObject
 
 interface ActiveMQProducer {
 
+    val key:String
+
     fun send(message: JsonObject)
 
     fun send(message: JsonObject,handler:Handler<AsyncResult<Void>>?)

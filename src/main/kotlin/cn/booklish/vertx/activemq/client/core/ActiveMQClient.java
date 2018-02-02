@@ -22,9 +22,9 @@ public interface ActiveMQClient {
         return new ActiveMQClientImpl(vertx,config);
     }
 
-    ActiveMQConsumer createConsumer(String destination);
+    ActiveMQConsumer createConsumer(String key,String destination);
 
-    ActiveMQSubscriber createSubscriber(String destination);
+    ActiveMQSubscriber createSubscriber(String key,String destination);
 
-    ActiveMQProducer createProducer(DestinationType destinationType, String destination);
+    ActiveMQProducer createProducer(String key,DestinationType destinationType, String destination);
 }

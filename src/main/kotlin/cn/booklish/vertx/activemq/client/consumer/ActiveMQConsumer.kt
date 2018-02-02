@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonObject
 
 interface ActiveMQConsumer{
 
+    val key:String
+
     fun listen(messageHandler: Handler<AsyncResult<JsonObject>>)
 
     fun close()

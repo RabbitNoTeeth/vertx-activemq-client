@@ -26,16 +26,16 @@ class ActiveMQClientImpl(private val vertx: Vertx, config: JsonObject):ActiveMQC
         connection.start()
     }
 
-    override fun createConsumer(destination: String): ActiveMQConsumer {
-        return ActiveMQConsumerImpl(vertx,sessionPool.getSession(),destination)
+    override fun createConsumer(key: String,destination: String): ActiveMQConsumer {
+        return ActiveMQConsumerImpl(key,vertx,sessionPool.getSession(),destination)
     }
 
-    override fun createSubscriber(destination: String): ActiveMQSubscriber {
-        return ActiveMQSubscriberImpl(vertx,sessionPool.getSession(),destination)
+    override fun createSubscriber(key: String,destination: String): ActiveMQSubscriber {
+        return ActiveMQSubscriberImpl(key,vertx,sessionPool.getSession(),destination)
     }
 
-    override fun createProducer(destinationType: DestinationType,destination: String): ActiveMQProducer {
-        return ActiveMQProducerImpl(vertx,sessionPool.getSession(),destinationType,destination)
+    override fun createProducer(key: String,destinationType: DestinationType,destination: String): ActiveMQProducer {
+        return ActiveMQProducerImpl(key,vertx,sessionPool.getSession(),destinationType,destination)
     }
 
 }

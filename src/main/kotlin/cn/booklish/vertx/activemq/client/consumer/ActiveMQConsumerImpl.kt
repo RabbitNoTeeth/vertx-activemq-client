@@ -1,5 +1,6 @@
 package cn.booklish.vertx.activemq.client.consumer
 
+import cn.booklish.vertx.activemq.client.cache.ActiveMQCacheManager
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
@@ -10,23 +11,32 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.jms.MessageConsumer
 import javax.jms.Session
 
-class ActiveMQConsumerImpl(private val vertx: Vertx, private val session: Session, destination: String):ActiveMQConsumer {
+class ActiveMQConsumerImpl(override val key: String, private val vertx: Vertx, private val session: Session, destination: String):ActiveMQConsumer {
 
     private val queue = session.createQueue(destination)
 
-    private var consumerRef: AtomicReference<MessageConsumer> = AtomicReference()
+    private val consumerRef: AtomicReference<MessageConsumer> = AtomicReference()
 
+    /**
+     * 开启监听
+     */
     override fun listen(messageHandler: Handler<AsyncResult<JsonObject>>) {
         vertx.executeBlocking(Handler<Future<JsonObject>>{
             try{
                 val consumer = this.consumerRef.get()
                 if(consumer == null){
                     val newConsumer = session.createConsumer(queue)
+                    //根据set结果判断consumerRef是否已被并发更新
                     if(this.consumerRef.compareAndSet(null,newConsumer)){
+                        //set成功
+                        //放入缓存管理器
+                        ActiveMQCacheManager.cacheConsumer(this)
+                        //设置消息监听,将消息传给handler
                         newConsumer.setMessageListener {
                             messageHandler.handle(Future.succeededFuture(JsonObject((it as ActiveMQTextMessage).text)))
                         }
                     }else{
+                        //set失败,说明consumerRef已被其他线程更新,那么关闭新创建的newConsumer释放资源
                         newConsumer.close()
                         messageHandler.handle(Future.failedFuture(IllegalStateException("${this.consumerRef.get()} had started, you should " +
                                 "not call this method more than one time!")))
@@ -41,15 +51,22 @@ class ActiveMQConsumerImpl(private val vertx: Vertx, private val session: Sessio
         }, null)
     }
 
+    /**
+     * 关闭监听
+     */
     override fun close() {
         val consumer = this.consumerRef.get()
         if(consumer != null){
             if(this.consumerRef.compareAndSet(consumer, null)){
                 consumer.close()
+                ActiveMQCacheManager.removeConsumer(this.key)
             }
         }
     }
 
+    /**
+     * 关闭监听
+     */
     override fun close(handler: Handler<AsyncResult<Void>>) {
         try {
             this.close()
