@@ -24,7 +24,7 @@ public class JavaExample {
         //------------------ queue ---------------------
 
         // get a consumer of queue
-        ActiveMQConsumer consumer = client.createConsumer("vertx-test-queue");
+        ActiveMQConsumer consumer = client.createConsumer("myKey","vertx-test-queue");
 
         // start the consumer
         consumer.listen(res -> {
@@ -36,7 +36,7 @@ public class JavaExample {
         });
 
         // get a producer of queue
-        ActiveMQProducer producer = client.createProducer(DestinationType.QUEUE, "vertx-test-queue");
+        ActiveMQProducer producer = client.createProducer("myKey",DestinationType.QUEUE, "vertx-test-queue");
 
         // send a message
         JsonObject message = new JsonObject().put("msg", "this is a test queue message!");
@@ -51,7 +51,7 @@ public class JavaExample {
         //------------------ topic ---------------------
 
         // get a subscriber of topic
-        ActiveMQSubscriber subscriber = client.createSubscriber("vertx-test-topic");
+        ActiveMQSubscriber subscriber = client.createSubscriber("myKey","vertx-test-topic");
 
         // start the consumer
         subscriber.listen(res -> {
@@ -63,7 +63,7 @@ public class JavaExample {
         });
 
         // get a producer of topic
-        ActiveMQProducer producer2 = client.createProducer(DestinationType.TOPIC, "vertx-test-topic");
+        ActiveMQProducer producer2 = client.createProducer("myKey",DestinationType.TOPIC, "vertx-test-topic");
 
         // send a message
         JsonObject message2 = new JsonObject().put("msg", "this is a test topic message!");
