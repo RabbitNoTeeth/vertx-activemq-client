@@ -16,8 +16,8 @@ object ActiveMQCacheManager {
 
     private val producerCache = ConcurrentHashMap<String,ActiveMQProducer>()
 
-    fun cacheConsumer(consumer: ActiveMQConsumer){
-        consumerCache.put(consumer.key,consumer)
+    fun cacheConsumer(consumer: ActiveMQConsumer):Boolean{
+        return consumerCache.putIfAbsent(consumer.key,consumer) == null
     }
 
     fun getConsumer(key: String): ActiveMQConsumer?{
@@ -28,8 +28,8 @@ object ActiveMQCacheManager {
         consumerCache.remove(key)
     }
 
-    fun cacheSubscriber(subscriber: ActiveMQSubscriber){
-        subscriberCache.put(subscriber.key,subscriber)
+    fun cacheSubscriber(subscriber: ActiveMQSubscriber):Boolean{
+        return subscriberCache.putIfAbsent(subscriber.key,subscriber) == null
     }
 
     fun getSubscriber(key: String): ActiveMQSubscriber?{
@@ -40,8 +40,8 @@ object ActiveMQCacheManager {
         subscriberCache.remove(key)
     }
 
-    fun cacheProducer(producer: ActiveMQProducer){
-        producerCache.put(producer.key,producer)
+    fun cacheProducer(producer: ActiveMQProducer):Boolean{
+        return producerCache.putIfAbsent(producer.key,producer) == null
     }
 
     fun getProducer(key: String): ActiveMQProducer?{

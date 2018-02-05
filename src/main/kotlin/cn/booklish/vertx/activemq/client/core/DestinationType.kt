@@ -1,8 +1,8 @@
 package cn.booklish.vertx.activemq.client.core
 
 
-enum class DestinationType {
+enum class DestinationType(value:String) {
 
-    QUEUE,TOPIC
+    QUEUE("queue"),TOPIC("topic")
 
 }

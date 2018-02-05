@@ -7,9 +7,11 @@ import cn.booklish.vertx.activemq.client.producer.ActiveMQProducer
 import cn.booklish.vertx.activemq.client.producer.ActiveMQProducerImpl
 import cn.booklish.vertx.activemq.client.subscriber.ActiveMQSubscriber
 import cn.booklish.vertx.activemq.client.subscriber.ActiveMQSubscriberImpl
+import cn.booklish.vertx.activemq.client.util.getUUID
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import org.apache.activemq.ActiveMQConnectionFactory
+import java.time.LocalDateTime
 import javax.jms.Connection
 
 
@@ -22,7 +24,7 @@ class ActiveMQClientImpl(private val vertx: Vertx, config: JsonObject):ActiveMQC
     private val sessionPool = ActiveMQSessionPool(connection,config.getInteger("sessionPoolSize")?:0)
 
     init {
-        connection.clientID = "vertx-activemq-client"
+        connection.clientID = config.getString("clientID")?:"vertx-activemq-client:${LocalDateTime.now()}"
         connection.start()
     }
 

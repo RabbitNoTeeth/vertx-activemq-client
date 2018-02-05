@@ -29,10 +29,8 @@ class ActiveMQSubscriberImpl(override val key:String, private val vertx: Vertx, 
                 if(subscriber == null){
                     val newSubscriber = session.createDurableSubscriber(topic, getUUID())
                     //根据set结果判断subscriberRef是否已被并发更新
-                    if(this.subscriberRef.compareAndSet(null,newSubscriber)){
-                        //set成功
-                        //加入缓存管理器
-                        ActiveMQCacheManager.cacheSubscriber(this)
+                    if(this.subscriberRef.compareAndSet(null,newSubscriber) &&
+                            ActiveMQCacheManager.cacheSubscriber(this)){
                         //设置消息监听,将消息传给handler
                         newSubscriber.setMessageListener {
                             messageHandler.handle(Future.succeededFuture(JsonObject((it as ActiveMQTextMessage).text)))
@@ -40,7 +38,7 @@ class ActiveMQSubscriberImpl(override val key:String, private val vertx: Vertx, 
                     }else{
                         //set失败,说明subscriberRef已被其他线程更新,那么关闭新创建的newSubscriber释放资源
                         newSubscriber.close()
-                        messageHandler.handle(Future.failedFuture(IllegalStateException("${this.subscriberRef.get()} had started, you should " +
+                        messageHandler.handle(Future.failedFuture(IllegalStateException("${this.javaClass.simpleName}:${this.key} had started, you should " +
                                 "not call this method more than one time!")))
                     }
                 }else{

@@ -27,10 +27,8 @@ class ActiveMQConsumerImpl(override val key: String, private val vertx: Vertx, p
                 if(consumer == null){
                     val newConsumer = session.createConsumer(queue)
                     //根据set结果判断consumerRef是否已被并发更新
-                    if(this.consumerRef.compareAndSet(null,newConsumer)){
-                        //set成功
-                        //放入缓存管理器
-                        ActiveMQCacheManager.cacheConsumer(this)
+                    if(this.consumerRef.compareAndSet(null,newConsumer) &&
+                        ActiveMQCacheManager.cacheConsumer(this)){
                         //设置消息监听,将消息传给handler
                         newConsumer.setMessageListener {
                             messageHandler.handle(Future.succeededFuture(JsonObject((it as ActiveMQTextMessage).text)))
@@ -38,7 +36,7 @@ class ActiveMQConsumerImpl(override val key: String, private val vertx: Vertx, p
                     }else{
                         //set失败,说明consumerRef已被其他线程更新,那么关闭新创建的newConsumer释放资源
                         newConsumer.close()
-                        messageHandler.handle(Future.failedFuture(IllegalStateException("${this.consumerRef.get()} had started, you should " +
+                        messageHandler.handle(Future.failedFuture(IllegalStateException("${this.javaClass.simpleName}:${this.key} had started, you should " +
                                 "not call this method more than one time!")))
                     }
                 }else{
