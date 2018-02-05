@@ -25,7 +25,7 @@ object ActiveMQCacheManager {
     }
 
     fun removeConsumer(key: String){
-        consumerCache.remove(key)
+        consumerCache.remove(key)?.close()
     }
 
     fun cacheSubscriber(subscriber: ActiveMQSubscriber):Boolean{
@@ -37,7 +37,7 @@ object ActiveMQCacheManager {
     }
 
     fun removeSubscriber(key: String){
-        subscriberCache.remove(key)
+        subscriberCache.remove(key)?.close()
     }
 
     fun cacheProducer(producer: ActiveMQProducer):Boolean{
@@ -49,7 +49,28 @@ object ActiveMQCacheManager {
     }
 
     fun removeProducer(key: String){
-        producerCache.remove(key)
+        producerCache.remove(key)?.close()
+    }
+
+    /**
+     * 根据键值前缀清空
+     */
+    fun clear(keyPrefix: String){
+        consumerCache.keys.forEach {
+            if(it.startsWith(keyPrefix,false)){
+                consumerCache.remove(it)?.close()
+            }
+        }
+        subscriberCache.keys.forEach {
+            if(it.startsWith(keyPrefix,false)){
+                subscriberCache.remove(it)?.close()
+            }
+        }
+        producerCache.keys.forEach {
+            if(it.startsWith(keyPrefix,false)){
+                producerCache.remove(it)?.close()
+            }
+        }
     }
 
 }

@@ -10,7 +10,7 @@ class ActiveMQSessionPool(private val connection: Connection, poolSize: Int) {
 
     private val random = Random()
 
-    private var DEFAULT_POOL_SIZE = 16
+    private var DEFAULT_POOL_SIZE = 8
 
     private val poolMap:ConcurrentHashMap<Int,Session>
 
