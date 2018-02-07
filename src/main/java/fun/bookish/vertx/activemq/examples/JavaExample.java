@@ -1,10 +1,10 @@
-package cn.booklish.vertx.activemq.examples;
+package fun.bookish.vertx.activemq.examples;
 
-import cn.booklish.vertx.activemq.client.consumer.ActiveMQConsumer;
-import cn.booklish.vertx.activemq.client.core.ActiveMQClient;
-import cn.booklish.vertx.activemq.client.core.DestinationType;
-import cn.booklish.vertx.activemq.client.producer.ActiveMQProducer;
-import cn.booklish.vertx.activemq.client.subscriber.ActiveMQSubscriber;
+import fun.bookish.vertx.activemq.client.consumer.ActiveMQConsumer;
+import fun.bookish.vertx.activemq.client.core.ActiveMQClient;
+import fun.bookish.vertx.activemq.client.core.DestinationType;
+import fun.bookish.vertx.activemq.client.producer.ActiveMQProducer;
+import fun.bookish.vertx.activemq.client.subscriber.ActiveMQSubscriber;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
@@ -36,7 +36,7 @@ public class JavaExample {
         });
 
         // get a producer of queue
-        ActiveMQProducer producer = client.createProducer("myKey",DestinationType.QUEUE, "vertx-test-queue");
+        ActiveMQProducer producer = client.createProducer("myKey", DestinationType.QUEUE, "vertx-test-queue");
 
         // send a message
         JsonObject message = new JsonObject().put("msg", "this is a test queue message!");
