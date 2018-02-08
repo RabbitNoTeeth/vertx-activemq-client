@@ -50,7 +50,7 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
         try{
             TopicSubscriber subscriber = this.subscriberRef.get();
             if(subscriber == null){
-                TopicSubscriber newSubscriber = session.createDurableSubscriber(topic, ExtUtils.getUUID());
+                TopicSubscriber newSubscriber = session.createDurableSubscriber(topic, this.key);
                 //根据set结果判断subscriberRef是否已被并发更新
                 if(this.subscriberRef.compareAndSet(null,newSubscriber) &&
                         ActiveMQCacheManager.cacheSubscriber(this)){
