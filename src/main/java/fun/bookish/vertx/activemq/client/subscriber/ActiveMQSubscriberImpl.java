@@ -20,13 +20,15 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
 
     private final String key;
     private final Vertx vertx;
+    private final ActiveMQCacheManager cacheManager;
     private final Session session;
     private final Topic topic;
 
-    public ActiveMQSubscriberImpl(String key,Vertx vertx,Session session,String destination){
+    public ActiveMQSubscriberImpl(String key,Vertx vertx,Session session,String destination,ActiveMQCacheManager cacheManager){
         this.key = key;
         this.vertx = vertx;
         this.session = session;
+        this.cacheManager = cacheManager;
         try {
             this.topic = session.createTopic(destination);
         }catch (JMSException e){
@@ -53,7 +55,7 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
                 TopicSubscriber newSubscriber = session.createDurableSubscriber(topic, this.key);
                 //根据set结果判断subscriberRef是否已被并发更新
                 if(this.subscriberRef.compareAndSet(null,newSubscriber) &&
-                        ActiveMQCacheManager.cacheSubscriber(this)){
+                        this.cacheManager.cacheSubscriber(this)){
                     //设置消息监听,将消息传给handler
                     newSubscriber.setMessageListener( message -> {
                         try {
@@ -92,7 +94,7 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
                 } catch (JMSException ignore) {
                     //ignore this exception
                 } finally {
-                    ActiveMQCacheManager.removeSubscriber(this.key);
+                    this.cacheManager.removeSubscriber(this.key);
                 }
             }
         }

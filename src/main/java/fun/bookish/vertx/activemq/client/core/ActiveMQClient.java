@@ -27,4 +27,12 @@ public interface ActiveMQClient {
     ActiveMQSubscriber createSubscriber(String key, String destination);
 
     ActiveMQProducer createProducer(String key, DestinationType destinationType, String destination);
+
+    ActiveMQConsumer getConsumer(String key);
+
+    ActiveMQSubscriber getSubscriber(String key);
+
+    ActiveMQProducer getProducer(String key);
+
+    void clear(String keyPrefix);
 }

@@ -21,14 +21,15 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
     private final Vertx vertx;
     private final Session session;
     private final String destination;
-
+    private final ActiveMQCacheManager cacheManager;
     private final Queue queue;
 
-    public ActiveMQConsumerImpl(String key,Vertx vertx,Session session,String destination){
+    public ActiveMQConsumerImpl(String key,Vertx vertx,Session session,String destination,ActiveMQCacheManager cacheManager){
         this.key = key;
         this.vertx = vertx;
         this.session = session;
         this.destination = destination;
+        this.cacheManager = cacheManager;
         try {
             this.queue = session.createQueue(destination);
         } catch (JMSException e) {
@@ -53,7 +54,7 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
                     MessageConsumer newConsumer = session.createConsumer(queue);
                     //根据set结果判断consumerRef是否已被并发更新
                     if(this.consumerRef.compareAndSet(null,newConsumer) &&
-                            ActiveMQCacheManager.cacheConsumer(this)){
+                            this.cacheManager.cacheConsumer(this)){
                         //设置消息监听,将消息传给handler
                         newConsumer.setMessageListener(message -> {
                             try {
@@ -92,7 +93,7 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
                 } catch (JMSException ignore) {
                     //ignore this exception
                 } finally {
-                    ActiveMQCacheManager.removeConsumer(this.key);
+                    this.cacheManager.removeConsumer(this.key);
                 }
             }
         }

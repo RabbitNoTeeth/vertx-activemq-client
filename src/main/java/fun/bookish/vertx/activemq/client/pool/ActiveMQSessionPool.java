@@ -12,12 +12,12 @@ public class ActiveMQSessionPool {
 
     private final Connection connection;
     private final int poolSize;
-    private static final ConcurrentHashMap<Integer,Session> pool = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer,Session> pool = new ConcurrentHashMap<>();
 
 
     public ActiveMQSessionPool(Connection connection,int poolSize){
         this.connection = connection;
-        if(poolSize > 1) {
+        if(poolSize >= 1) {
             this.poolSize = poolSize;
         }else{
             this.poolSize = DEFAULT_POOL_SIZE;

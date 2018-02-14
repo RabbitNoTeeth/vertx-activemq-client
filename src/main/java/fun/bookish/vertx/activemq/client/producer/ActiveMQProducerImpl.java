@@ -21,15 +21,16 @@ public class ActiveMQProducerImpl implements ActiveMQProducer{
     private final Session session;
     private final DestinationType destinationType;
     private final String destination;
+    private final ActiveMQCacheManager cacheManager;
     private MessageProducer producer;
 
-    public ActiveMQProducerImpl(String key,Vertx vertx,Session session,DestinationType destinationType,String destination){
+    public ActiveMQProducerImpl(String key,Vertx vertx,Session session,DestinationType destinationType,String destination,ActiveMQCacheManager cacheManager){
         this.key = key;
         this.vertx = vertx;
         this.session = session;
         this.destinationType = destinationType;
         this.destination = destination;
-
+        this.cacheManager = cacheManager;
         try {
 
             switch (destinationType){
@@ -41,7 +42,7 @@ public class ActiveMQProducerImpl implements ActiveMQProducer{
                     break;
             }
 
-            ActiveMQCacheManager.cacheProducer(this);
+            this.cacheManager.cacheProducer(this);
 
         }catch (JMSException e){
             throw new IllegalArgumentException("failed creating a destination for:"+destination);
@@ -92,7 +93,7 @@ public class ActiveMQProducerImpl implements ActiveMQProducer{
         } catch (JMSException ignore) {
             //ignore this exception
         }finally {
-            ActiveMQCacheManager.removeProducer(this.key);
+            this.cacheManager.removeProducer(this.key);
         }
     }
 
