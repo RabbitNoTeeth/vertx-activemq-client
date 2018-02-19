@@ -68,11 +68,11 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
                 }else{
                     //set失败,说明subscriberRef已被其他线程更新,那么关闭新创建的newSubscriber释放资源
                     newSubscriber.close();
-                    messageHandler.handle(Future.failedFuture(new IllegalStateException("${this.javaClass.simpleName}:${this.key} had started, you should " +
+                    messageHandler.handle(Future.failedFuture(new IllegalStateException(this.getClass().getTypeName()+":"+this.key+" had started, you cant " +
                             "not call this method more than one time!")));
                 }
             }else{
-                messageHandler.handle(Future.failedFuture(new IllegalStateException("$subscriber had started, you should " +
+                messageHandler.handle(Future.failedFuture(new IllegalStateException(subscriber + " had started, you should " +
                         "not call this method more than one time!")));
             }
         }catch (Exception e){

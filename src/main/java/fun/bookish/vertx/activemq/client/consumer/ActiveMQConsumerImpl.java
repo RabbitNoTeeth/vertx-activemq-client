@@ -67,11 +67,11 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
                     }else{
                         //set失败,说明consumerRef已被其他线程更新,那么关闭新创建的newConsumer释放资源
                         newConsumer.close();
-                        messageHandler.handle(Future.failedFuture(new IllegalStateException("${this.javaClass.simpleName}:${this.key} had started, you should " +
+                        messageHandler.handle(Future.failedFuture(new IllegalStateException(this.getClass().getTypeName()+":"+this.key+" had started, you should " +
                                 "not call this method more than one time!")));
                     }
                 }else{
-                    messageHandler.handle(Future.failedFuture(new IllegalStateException("$consumer had started, you should " +
+                    messageHandler.handle(Future.failedFuture(new IllegalStateException(consumer + " had started, you cant " +
                             "not call this method more than one time!")));
                 }
             }catch (Exception e){
