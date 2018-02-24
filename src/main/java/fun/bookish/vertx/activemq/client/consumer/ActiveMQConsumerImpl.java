@@ -37,7 +37,7 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
         }
     }
 
-    private final AtomicReference<MessageConsumer> consumerRef = new AtomicReference<>();
+    private final AtomicReference<Future<MessageConsumer>> consumerRef = new AtomicReference<>();
 
 
     @Override
@@ -45,16 +45,19 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
         return this.key;
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public void listen(Handler<AsyncResult<JsonObject>> messageHandler) {
         this.vertx.executeBlocking(res -> {
             try{
-                MessageConsumer consumer = this.consumerRef.get();
-                if(consumer == null){
-                    MessageConsumer newConsumer = session.createConsumer(queue);
+                Future<MessageConsumer> future = this.consumerRef.get();
+                if(future == null){
+                    Future<MessageConsumer> newFuture = Future.future();
                     //根据set结果判断consumerRef是否已被并发更新
-                    if(this.consumerRef.compareAndSet(null,newConsumer) &&
+                    if(this.consumerRef.compareAndSet(null,newFuture) &&
                             this.cacheManager.cacheConsumer(this)){
+                        MessageConsumer newConsumer = session.createConsumer(queue);
+                        newFuture.complete(newConsumer);
                         //设置消息监听,将消息传给handler
                         newConsumer.setMessageListener(message -> {
                             try {
@@ -65,13 +68,12 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
                             }
                         });
                     }else{
-                        //set失败,说明consumerRef已被其他线程更新,那么关闭新创建的newConsumer释放资源
-                        newConsumer.close();
+                        //set失败,说明consumerRef已被其他线程更新
                         messageHandler.handle(Future.failedFuture(new IllegalStateException(this.getClass().getTypeName()+":"+this.key+" had started, you should " +
                                 "not call this method more than one time!")));
                     }
                 }else{
-                    messageHandler.handle(Future.failedFuture(new IllegalStateException(consumer + " had started, you cant " +
+                    messageHandler.handle(Future.failedFuture(new IllegalStateException(future.result() + " had started, you cant " +
                             "not call this method more than one time!")));
                 }
             }catch (Exception e){
@@ -85,11 +87,11 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
      */
     @Override
     public void close() {
-        MessageConsumer consumer = this.consumerRef.get();
-        if(consumer != null){
-            if(this.consumerRef.compareAndSet(consumer, null)){
+        Future<MessageConsumer> future = this.consumerRef.get();
+        if(future != null){
+            if(this.consumerRef.compareAndSet(future, null)){
                 try {
-                    consumer.close();
+                    future.result().close();
                 } catch (JMSException ignore) {
                     //ignore this exception
                 } finally {

@@ -36,7 +36,7 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
         }
     }
 
-    private final AtomicReference<TopicSubscriber> subscriberRef = new AtomicReference<>();
+    private final AtomicReference<Future<TopicSubscriber>> subscriberRef = new AtomicReference<>();
 
     @Override
     public String getKey() {
@@ -46,16 +46,19 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
     /**
      * 开启订阅监听
      */
+    @SuppressWarnings("Duplicates")
     @Override
     public void listen(Handler<AsyncResult<JsonObject>> messageHandler) {
         this.vertx.executeBlocking(res -> {
         try{
-            TopicSubscriber subscriber = this.subscriberRef.get();
-            if(subscriber == null){
-                TopicSubscriber newSubscriber = session.createDurableSubscriber(topic, this.key);
+            Future<TopicSubscriber> future = this.subscriberRef.get();
+            if(future == null){
+                Future<TopicSubscriber> newFuture = Future.future();
                 //根据set结果判断subscriberRef是否已被并发更新
-                if(this.subscriberRef.compareAndSet(null,newSubscriber) &&
+                if(this.subscriberRef.compareAndSet(null,newFuture) &&
                         this.cacheManager.cacheSubscriber(this)){
+                    TopicSubscriber newSubscriber = session.createDurableSubscriber(topic, this.key);
+                    newFuture.complete(newSubscriber);
                     //设置消息监听,将消息传给handler
                     newSubscriber.setMessageListener( message -> {
                         try {
@@ -66,13 +69,12 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
                         }
                     });
                 }else{
-                    //set失败,说明subscriberRef已被其他线程更新,那么关闭新创建的newSubscriber释放资源
-                    newSubscriber.close();
+                    //set失败,说明subscriberRef已被其他线程更新
                     messageHandler.handle(Future.failedFuture(new IllegalStateException(this.getClass().getTypeName()+":"+this.key+" had started, you cant " +
                             "not call this method more than one time!")));
                 }
             }else{
-                messageHandler.handle(Future.failedFuture(new IllegalStateException(subscriber + " had started, you should " +
+                messageHandler.handle(Future.failedFuture(new IllegalStateException(future.result() + " had started, you should " +
                         "not call this method more than one time!")));
             }
         }catch (Exception e){
@@ -86,11 +88,11 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
      */
     @Override
     public void close() {
-        TopicSubscriber subscriber = this.subscriberRef.get();
-        if(subscriber != null){
-            if(this.subscriberRef.compareAndSet(subscriber, null)){
+        Future<TopicSubscriber> future = this.subscriberRef.get();
+        if(future != null){
+            if(this.subscriberRef.compareAndSet(future, null)){
                 try {
-                    subscriber.close();
+                    future.result().close();
                 } catch (JMSException ignore) {
                     //ignore this exception
                 } finally {
