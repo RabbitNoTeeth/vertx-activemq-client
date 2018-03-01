@@ -4,6 +4,8 @@ import fun.bookish.vertx.activemq.client.core.ActiveMQClient;
 
 public class ActiveMQClientConstants {
 
+    private ActiveMQClientConstants(){}
+
     public static final String VERTX_CTX_KEY = ActiveMQClient.class.getTypeName();
 
 }

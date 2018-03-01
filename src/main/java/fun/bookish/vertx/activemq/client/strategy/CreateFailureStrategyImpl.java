@@ -1,5 +1,6 @@
 package fun.bookish.vertx.activemq.client.strategy;
 
+import fun.bookish.vertx.activemq.client.config.ActiveMQClientConfigKey;
 import fun.bookish.vertx.activemq.client.core.DestinationType;
 import fun.bookish.vertx.activemq.client.pool.ActiveMQSessionPool;
 import io.vertx.core.json.JsonObject;
@@ -29,7 +30,7 @@ public class CreateFailureStrategyImpl implements CreateFailureStrategy {
         this.sessionPool = sessionPool;
         this.connectionRef.set(connection);
         this.config = config;
-        Integer retryTimes = config.getInteger("CreateFailureStrategy.retryTimes");
+        Integer retryTimes = config.getInteger(ActiveMQClientConfigKey.RETRY_TIMES.value());
         this.retryTimes =  (retryTimes == null || retryTimes < 1)? 3 : retryTimes;
     }
 

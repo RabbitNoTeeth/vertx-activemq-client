@@ -1,6 +1,7 @@
 package fun.bookish.vertx.activemq.client.core;
 
 import fun.bookish.vertx.activemq.client.cache.ActiveMQCacheManager;
+import fun.bookish.vertx.activemq.client.config.ActiveMQClientConfigKey;
 import fun.bookish.vertx.activemq.client.constants.ActiveMQClientConstants;
 import fun.bookish.vertx.activemq.client.consumer.ActiveMQConsumer;
 import fun.bookish.vertx.activemq.client.consumer.ActiveMQConsumerImpl;
@@ -35,14 +36,16 @@ public class ActiveMQClientImpl implements ActiveMQClient {
         try {
             this.vertx = vertx;
             this.config = config;
-            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(config.getString("username"),
-                    config.getString("password"),config.getString("brokerURL"));
+            ActiveMQConnectionFactory connectionFactory =
+                    new ActiveMQConnectionFactory(config.getString(ActiveMQClientConfigKey.USERNAME.value()),
+                            config.getString(ActiveMQClientConfigKey.PASSWORD.value()),
+                            config.getString(ActiveMQClientConfigKey.BROKER_URL.value()));
             Connection connection = connectionFactory.createConnection();
-            String clientID = config.getString("clientID");
+            String clientID = config.getString(ActiveMQClientConfigKey.CLIENT_ID.value());
             connection.setClientID(clientID==null?"vertx-activemq-client:"+ LocalDateTime.now():clientID);
             connection.start();
             this.connectionRef.set(connection);
-            Integer poolSize = config.getInteger("sessionPoolSize");
+            Integer poolSize = config.getInteger(ActiveMQClientConfigKey.SESSION_POOL_SIZE.value());
             this.sessionPool = new ActiveMQSessionPool(connection,poolSize==null?0:poolSize);
             this.cacheManager = new ActiveMQCacheManager();
             this.createFailureStrategy = new CreateFailureStrategyImpl(connectionFactory,this.sessionPool,connection,this.config);
