@@ -4,7 +4,7 @@ vertx版本的ActiveMq客户端<br>
 
 ## 配置使用（how to use）
 
-#####1.创建客户端(create a client)
+###1.创建客户端(create a client)
 
 <pre><code>
 
@@ -32,7 +32,7 @@ ActiveMQClient client = ActiveMQClient.create(vertx,config);
 </code></pre>
 
 
-#####2.创建消息生产者（create a producer）
+###2.创建消息生产者（create a producer）
 
 <pre><code>
 
@@ -68,7 +68,7 @@ producer.send(message,res -> {
 
 </code></pre>
 
-#####3.创建消息消费者（create a consumer of queue）
+###3.创建消息消费者（create a consumer of queue）
 
 <pre><code>
 
@@ -93,7 +93,7 @@ consumer.listen(res -> {
 
 </code></pre>
 
-#####4.创建消息订阅者（create a subscriber of topic）
+###4.创建消息订阅者（create a subscriber of topic）
 
 <pre><code>
 
