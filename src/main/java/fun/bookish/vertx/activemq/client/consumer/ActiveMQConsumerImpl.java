@@ -2,6 +2,7 @@ package fun.bookish.vertx.activemq.client.consumer;
 
 
 import fun.bookish.vertx.activemq.client.cache.ActiveMQCacheManager;
+import fun.bookish.vertx.activemq.client.strategy.CreateFailureStrategyImpl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -22,18 +23,24 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
     private final Session session;
     private final String destination;
     private final ActiveMQCacheManager cacheManager;
-    private final Queue queue;
+    private final CreateFailureStrategyImpl createFailureStrategy;
+    private Queue queue;
 
-    public ActiveMQConsumerImpl(String key,Vertx vertx,Session session,String destination,ActiveMQCacheManager cacheManager){
+    public ActiveMQConsumerImpl(String key,Vertx vertx,Session session,String destination,
+                                ActiveMQCacheManager cacheManager,CreateFailureStrategyImpl createFailureStrategy){
         this.key = key;
         this.vertx = vertx;
         this.session = session;
         this.destination = destination;
         this.cacheManager = cacheManager;
+        this.createFailureStrategy = createFailureStrategy;
         try {
             this.queue = session.createQueue(destination);
         } catch (JMSException e) {
-            throw new IllegalArgumentException("failed creating a queue of destination:"+destination);
+            this.queue = this.createFailureStrategy.retryCreateQueue(this.session,this.destination);
+            if(this.queue==null){
+                throw new IllegalArgumentException("failed creating a queue of destination:"+destination);
+            }
         }
     }
 

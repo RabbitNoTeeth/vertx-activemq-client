@@ -3,6 +3,7 @@ package fun.bookish.vertx.activemq.client.producer;
 
 import fun.bookish.vertx.activemq.client.cache.ActiveMQCacheManager;
 import fun.bookish.vertx.activemq.client.core.DestinationType;
+import fun.bookish.vertx.activemq.client.strategy.CreateFailureStrategyImpl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -22,15 +23,18 @@ public class ActiveMQProducerImpl implements ActiveMQProducer{
     private final DestinationType destinationType;
     private final String destination;
     private final ActiveMQCacheManager cacheManager;
+    private final CreateFailureStrategyImpl createFailureStrategy;
     private MessageProducer producer;
 
-    public ActiveMQProducerImpl(String key,Vertx vertx,Session session,DestinationType destinationType,String destination,ActiveMQCacheManager cacheManager){
+    public ActiveMQProducerImpl(String key,Vertx vertx,Session session,DestinationType destinationType,String destination,
+                                ActiveMQCacheManager cacheManager,CreateFailureStrategyImpl createFailureStrategy){
         this.key = key;
         this.vertx = vertx;
         this.session = session;
         this.destinationType = destinationType;
         this.destination = destination;
         this.cacheManager = cacheManager;
+        this.createFailureStrategy = createFailureStrategy;
         try {
 
             switch (destinationType){
@@ -45,9 +49,12 @@ public class ActiveMQProducerImpl implements ActiveMQProducer{
             this.cacheManager.cacheProducer(this);
 
         }catch (JMSException e){
-            throw new IllegalArgumentException("failed creating a destination for:"+destination);
+            this.producer = this.createFailureStrategy.retryCreateProducer(this.session, this.destinationType,this.destination);
+            if(this.producer == null){
+                throw new IllegalArgumentException("failed creating a destination for:"+destination);
+            }
+            this.cacheManager.cacheProducer(this);
         }
-
 
     }
 

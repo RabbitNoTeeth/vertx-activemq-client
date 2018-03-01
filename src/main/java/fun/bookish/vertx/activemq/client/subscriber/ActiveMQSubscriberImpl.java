@@ -1,6 +1,7 @@
 package fun.bookish.vertx.activemq.client.subscriber;
 
 import fun.bookish.vertx.activemq.client.cache.ActiveMQCacheManager;
+import fun.bookish.vertx.activemq.client.strategy.CreateFailureStrategyImpl;
 import fun.bookish.vertx.activemq.client.util.ExtUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -22,17 +23,25 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
     private final Vertx vertx;
     private final ActiveMQCacheManager cacheManager;
     private final Session session;
-    private final Topic topic;
+    private final String destination;
+    private final CreateFailureStrategyImpl createFailureStrategy;
+    private Topic topic;
 
-    public ActiveMQSubscriberImpl(String key,Vertx vertx,Session session,String destination,ActiveMQCacheManager cacheManager){
+    public ActiveMQSubscriberImpl(String key,Vertx vertx,Session session,String destination,
+                                  ActiveMQCacheManager cacheManager,CreateFailureStrategyImpl createFailureStrategy){
         this.key = key;
         this.vertx = vertx;
         this.session = session;
+        this.destination = destination;
         this.cacheManager = cacheManager;
+        this.createFailureStrategy = createFailureStrategy;
         try {
             this.topic = session.createTopic(destination);
         }catch (JMSException e){
-            throw new IllegalArgumentException("failed creating a topic of destination:"+destination);
+            this.topic = this.createFailureStrategy.retryCreateTopic(this.session,this.destination);
+            if(this.topic == null){
+                throw new IllegalArgumentException("failed creating a topic of destination:"+destination);
+            }
         }
     }
 
