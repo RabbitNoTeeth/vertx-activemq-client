@@ -7,6 +7,8 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ActiveMQSessionPool {
@@ -14,7 +16,7 @@ public class ActiveMQSessionPool {
     private final AtomicReference<Connection> connectionRef = new AtomicReference<>();
     private final int poolSize;
 
-    private final ConcurrentHashMap<Integer,Session> pool = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer,Future<Session>> pool = new ConcurrentHashMap<>();
 
     public ActiveMQSessionPool(Connection connection,int poolSize){
         this.connectionRef.set(connection);
@@ -25,20 +27,20 @@ public class ActiveMQSessionPool {
 
     public Session getSession(){
         int randomKey = random.nextInt(this.poolSize);
-        Session session = pool.get(randomKey);
+        Future<Session> future = pool.get(randomKey);
         try {
-            if(session == null){
-                Session newSession = this.connectionRef.get().createSession(false, Session.AUTO_ACKNOWLEDGE);
-                if(pool.putIfAbsent(randomKey,newSession) == null){
-                    session = newSession;
-                }else{
-                    newSession.close();
+            if(future == null){
+                Future<Session> newFuture = new FutureTask<>(() -> this.connectionRef.get().createSession(false, Session.AUTO_ACKNOWLEDGE));
+                if(pool.putIfAbsent(randomKey,newFuture) == null){
+                    future = newFuture;
+                }else {
+                    future = pool.get(randomKey);
                 }
             }
-        }catch (JMSException e){
+            return future.get();
+        }catch (Exception e){
             throw new IllegalArgumentException("failed creating session of connection:" + this.connectionRef.get());
         }
-        return session;
     }
 
     public boolean setConnection(Connection old,Connection newOne){
