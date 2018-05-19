@@ -7,7 +7,6 @@ public enum ActiveMQClientConfigKey {
     PASSWORD("password"),
     BROKER_URL("brokerURL"),
     CLIENT_ID("clientID"),
-    SESSION_POOL_SIZE("sessionPoolSize"),
     RETRY_TIMES("retryTimes");
 
     private final String value;

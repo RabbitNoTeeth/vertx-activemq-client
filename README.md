@@ -12,7 +12,7 @@ vertx版本的ActiveMq客户端<br>
 Vertx vertx = Vertx.vertx();
 
 //配置active基础属性
-JsonObject config = new JsonObject()
+JsonObject blog.bookish.main.config = new JsonObject()
                         .put(ActiveMQClientConfigKey.USERNAME.value(),"xxx")
                         .put(ActiveMQClientConfigKey.PASSWORD.value(),"xxx")
                         .put(ActiveMQClientConfigKey.BROKER_URL.value(),"tcp://127.0.0.1:61616");
@@ -20,15 +20,15 @@ JsonObject config = new JsonObject()
 /**
  * 配置扩展属性
  * 1.配置session连接池大小（默认大小为3）
- *      config.put(ActiveMQClientConfigKey.SESSION_POOL_SIZE.value(),10);
+ *      blog.bookish.main.config.put(ActiveMQClientConfigKey.SESSION_POOL_SIZE.value(),10);
  * 2.配置重连次数（应用在运行过程中，如果与active节点异常中断，
  *   那么在下一次创建消息消费者/监听者或者生产者时将尝试重新连接）
- *      config.put(ActiveMQClientConfigKey.RETRY_TIMES.value(),5);
+ *      blog.bookish.main.config.put(ActiveMQClientConfigKey.RETRY_TIMES.value(),5);
  */
 
 
 // 创建客户端（create a client）
-ActiveMQClient client = ActiveMQClient.create(vertx,config);
+ActiveMQClient client = ActiveMQClient.create(vertx,blog.bookish.main.config);
 
 </code></pre>
 

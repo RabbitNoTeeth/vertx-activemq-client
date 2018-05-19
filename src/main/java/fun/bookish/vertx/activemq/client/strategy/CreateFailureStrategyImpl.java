@@ -127,8 +127,8 @@ public class CreateFailureStrategyImpl implements CreateFailureStrategy {
             Connection newConnection = connectionFactory.createConnection();
             String clientID = config.getString("clientID");
             newConnection.setClientID(clientID==null?"vertx-activemq-client:"+ LocalDateTime.now():clientID);
-            newConnection.start();
             if(this.connectionRef.compareAndSet(old,newConnection)){
+                newConnection.start();
                 return newConnection;
             }else {
                 return this.connectionRef.get();
@@ -146,8 +146,7 @@ public class CreateFailureStrategyImpl implements CreateFailureStrategy {
             if(newConnection == null){
                 return null;
             }
-            this.sessionPool.setConnection(connection,newConnection);
-            session = this.sessionPool.getSession();
+            session = this.sessionPool.reConnect(connection,newConnection);
         }
 
         if(((ActiveMQSession)session).isClosed()){

@@ -13,7 +13,6 @@ import fun.bookish.vertx.activemq.client.subscriber.ActiveMQSubscriber;
 import fun.bookish.vertx.activemq.client.subscriber.ActiveMQSubscriberImpl;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import org.apache.activemq.ActiveMQConnectionConsumer;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.Connection;
@@ -26,7 +25,7 @@ public class ActiveMQClientImpl implements ActiveMQClient {
 
     private final Vertx vertx;
     private final JsonObject config;
-    private final AtomicReference<Connection> connectionRef = new AtomicReference<>();
+    private static final AtomicReference<Connection> connectionRef = new AtomicReference<>();
     private final ActiveMQSessionPool sessionPool;
     private final ActiveMQCacheManager cacheManager;
     private final CreateFailureStrategyImpl createFailureStrategy;
@@ -45,8 +44,7 @@ public class ActiveMQClientImpl implements ActiveMQClient {
             connection.setClientID(clientID==null?"vertx-activemq-client:"+ LocalDateTime.now():clientID);
             connection.start();
             this.connectionRef.set(connection);
-            Integer poolSize = config.getInteger(ActiveMQClientConfigKey.SESSION_POOL_SIZE.value());
-            this.sessionPool = new ActiveMQSessionPool(connection,poolSize==null?0:poolSize);
+            this.sessionPool = new ActiveMQSessionPool(connection);
             this.cacheManager = new ActiveMQCacheManager();
             this.createFailureStrategy = new CreateFailureStrategyImpl(connectionFactory,this.sessionPool,connection,this.config);
             this.vertx.getOrCreateContext().put(ActiveMQClientConstants.VERTX_CTX_KEY,this);

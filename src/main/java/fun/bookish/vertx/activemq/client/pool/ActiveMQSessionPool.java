@@ -13,37 +13,36 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ActiveMQSessionPool {
 
-    private final AtomicReference<Connection> connectionRef = new AtomicReference<>();
-    private final int poolSize;
+    private final AtomicReference<Connection> connection = new AtomicReference<>(null);
+    private Session session;
 
     private final ConcurrentHashMap<Integer,Future<Session>> pool = new ConcurrentHashMap<>();
 
-    public ActiveMQSessionPool(Connection connection,int poolSize){
-        this.connectionRef.set(connection);
-        this.poolSize = (poolSize >= 1)? 3 : poolSize;
+    public ActiveMQSessionPool(Connection connection){
+        this.connection.set(connection);
+        createSession();
     }
 
-    private final static Random random = new Random();
+    public Session getSession() {
+        return session;
+    }
 
-    public Session getSession(){
-        int randomKey = random.nextInt(this.poolSize);
-        Future<Session> future = pool.get(randomKey);
+    public Session reConnect(Connection oldCon,Connection newCon){
         try {
-            if(future == null){
-                Future<Session> newFuture = new FutureTask<>(() -> this.connectionRef.get().createSession(false, Session.AUTO_ACKNOWLEDGE));
-                if(pool.putIfAbsent(randomKey,newFuture) == null){
-                    future = newFuture;
-                }else {
-                    future = pool.get(randomKey);
-                }
+            if(this.connection.compareAndSet(oldCon,newCon)){
+                this.session = newCon.createSession(false,Session.AUTO_ACKNOWLEDGE);
             }
-            return future.get();
-        }catch (Exception e){
-            throw new IllegalArgumentException("failed creating session of connection:" + this.connectionRef.get());
+            return this.session;
+        } catch (JMSException e) {
+            return null;
         }
     }
 
-    public boolean setConnection(Connection old,Connection newOne){
-        return this.connectionRef.compareAndSet(old,newOne);
+    private void createSession(){
+        try {
+            this.session = connection.get().createSession(false,Session.AUTO_ACKNOWLEDGE);
+        } catch (JMSException e) {
+            throw new IllegalArgumentException("failed creating session of connection:" + connection);
+        }
     }
 }
