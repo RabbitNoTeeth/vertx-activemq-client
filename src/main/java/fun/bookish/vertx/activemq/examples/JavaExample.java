@@ -17,7 +17,10 @@ public class JavaExample {
         Vertx vertx = Vertx.vertx();
 
         //配置active基础属性
-        ActiveMQOptions options = new ActiveMQOptions().setUsername("xxx").setPassword("xxx").setBroker("tcp://127.0.0.1:61616");
+        ActiveMQOptions options = new ActiveMQOptions();
+        options.setUsername("xxx");
+        options.setPassword("xxx");
+        options.setBroker("tcp://127.0.0.1:61616");
 
         /**
          * 配置扩展属性

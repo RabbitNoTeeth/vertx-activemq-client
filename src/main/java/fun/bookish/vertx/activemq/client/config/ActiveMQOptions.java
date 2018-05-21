@@ -18,62 +18,55 @@ public class ActiveMQOptions {
         return clientId;
     }
 
-    public ActiveMQOptions setClientId(String clientId) {
+    public void setClientId(String clientId) {
         this.clientId = clientId;
-        return this;
     }
 
     public String getBroker() {
         return broker;
     }
 
-    public ActiveMQOptions setBroker(String broker) {
+    public void setBroker(String broker) {
         this.broker = broker;
-        return this;
     }
 
     public String getUsername() {
         return username;
     }
 
-    public ActiveMQOptions setUsername(String username) {
+    public void setUsername(String username) {
         this.username = username;
-        return this;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public ActiveMQOptions setPassword(String password) {
+    public void setPassword(String password) {
         this.password = password;
-        return this;
     }
 
     public int getRetryTimes() {
         return retryTimes;
     }
 
-    public ActiveMQOptions setRetryTimes(int retryTimes) {
+    public void setRetryTimes(int retryTimes) {
         this.retryTimes = retryTimes;
-        return this;
     }
 
     public boolean isTransacted() {
         return transacted;
     }
 
-    public ActiveMQOptions setTransacted(boolean transacted) {
+    public void setTransacted(boolean transacted) {
         this.transacted = transacted;
-        return this;
     }
 
     public int getAcknowledgeMode() {
         return acknowledgeMode;
     }
 
-    public ActiveMQOptions setAcknowledgeMode(int acknowledgeMode) {
+    public void setAcknowledgeMode(int acknowledgeMode) {
         this.acknowledgeMode = acknowledgeMode;
-        return this;
     }
 }
