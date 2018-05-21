@@ -1,6 +1,6 @@
 package fun.bookish.vertx.activemq.examples;
 
-import fun.bookish.vertx.activemq.client.config.ActiveMQClientConfigKey;
+import fun.bookish.vertx.activemq.client.config.ActiveMQOptions;
 import fun.bookish.vertx.activemq.client.consumer.ActiveMQConsumer;
 import fun.bookish.vertx.activemq.client.core.ActiveMQClient;
 import fun.bookish.vertx.activemq.client.core.DestinationType;
@@ -17,10 +17,7 @@ public class JavaExample {
         Vertx vertx = Vertx.vertx();
 
         //配置active基础属性
-        JsonObject config = new JsonObject()
-                                .put(ActiveMQClientConfigKey.USERNAME.value(),"xxx")
-                                .put(ActiveMQClientConfigKey.PASSWORD.value(),"xxx")
-                                .put(ActiveMQClientConfigKey.BROKER_URL.value(),"tcp://127.0.0.1:61616");
+        ActiveMQOptions options = new ActiveMQOptions().setUsername("xxx").setPassword("xxx").setBroker("tcp://127.0.0.1:61616");
 
         /**
          * 配置扩展属性
@@ -33,7 +30,7 @@ public class JavaExample {
 
 
         // 创建客户端（create a client）
-        ActiveMQClient client = ActiveMQClient.create(vertx,config);
+        ActiveMQClient client = ActiveMQClient.create(vertx,options);
 
         /*---------------------------- queue ----------------------------*/
 

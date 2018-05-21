@@ -45,7 +45,7 @@ public class ActiveMQProducerImpl implements ActiveMQProducer{
             this.cacheManager.cacheProducer(this);
 
         }catch (JMSException e){
-            throw new IllegalArgumentException("failed creating a destination for:"+destination);
+            throw new IllegalArgumentException("ActiveMQ消息生产者创建失败, destination = "+destination);
         }
 
     }

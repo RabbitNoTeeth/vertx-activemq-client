@@ -33,7 +33,7 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
         try {
             this.topic = session.createTopic(destination);
         }catch (JMSException e){
-            throw new IllegalArgumentException("failed creating a topic of destination:"+destination);
+            throw new IllegalArgumentException("ActiveMQ主题订阅者创建失败, topic = " + topic);
         }
     }
 
@@ -71,12 +71,10 @@ public class ActiveMQSubscriberImpl implements ActiveMQSubscriber {
                     });
                 }else{
                     //set失败,说明subscriberRef已被其他线程更新
-                    messageHandler.handle(Future.failedFuture(new IllegalStateException(this.getClass().getTypeName()+":"+this.key+" had started, you cant " +
-                            "not call this method more than one time!")));
+                    messageHandler.handle(Future.failedFuture(new IllegalStateException("ActiveMQ主题订阅者监听已启动，请不要重复启动! key = " + this.key + ", queue = " + this.topic)));
                 }
             }else{
-                messageHandler.handle(Future.failedFuture(new IllegalStateException(future.result() + " had started, you should " +
-                        "not call this method more than one time!")));
+                messageHandler.handle(Future.failedFuture(new IllegalStateException("ActiveMQ主题订阅者监听已启动，请不要重复启动! key = " + this.key + ", queue = " + this.topic)));
             }
         }catch (Exception e){
             messageHandler.handle(Future.failedFuture(e));

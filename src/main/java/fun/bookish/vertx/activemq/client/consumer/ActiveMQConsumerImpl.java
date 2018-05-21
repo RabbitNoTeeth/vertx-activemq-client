@@ -33,7 +33,7 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
         try {
             this.queue = session.createQueue(destination);
         } catch (JMSException e) {
-            throw new IllegalArgumentException("failed creating a queue of destination:"+destination);
+            throw new IllegalArgumentException("ActiveMQ队列消费者创建失败, queue = " + queue);
         }
     }
 
@@ -69,12 +69,10 @@ public class ActiveMQConsumerImpl implements ActiveMQConsumer {
                         });
                     }else{
                         //set失败,说明consumerRef已被其他线程更新
-                        messageHandler.handle(Future.failedFuture(new IllegalStateException(this.getClass().getTypeName()+":"+this.key+" had started, you should " +
-                                "not call this method more than one time!")));
+                        messageHandler.handle(Future.failedFuture(new IllegalStateException("ActiveMQ队列消费者监听已启动，请不要重复启动! key = " + this.key + ", queue = " + this.queue)));
                     }
                 }else{
-                    messageHandler.handle(Future.failedFuture(new IllegalStateException(future.result() + " had started, you cant " +
-                            "not call this method more than one time!")));
+                    messageHandler.handle(Future.failedFuture(new IllegalStateException("ActiveMQ队列消费者监听已启动，请不要重复启动! key = " + this.key + ", queue = " + this.queue)));
                 }
             }catch (Exception e){
                 messageHandler.handle(Future.failedFuture(e));

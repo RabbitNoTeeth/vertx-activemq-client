@@ -2,7 +2,7 @@ package fun.bookish.vertx.activemq.client.pool;
 
 
 
-import fun.bookish.vertx.activemq.client.config.ActiveMQClientConfigKey;
+import fun.bookish.vertx.activemq.client.config.ActiveMQOptions;
 import io.vertx.core.json.JsonObject;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
@@ -22,47 +22,38 @@ public class ActiveMQSessionPool {
 
     private final ActiveMQConnectionFactory connectionFactory;
     private final AtomicReference<Connection> connection = new AtomicReference<>(null);
-    private final JsonObject config;
+    private final ActiveMQOptions options;
     private AtomicReference<Session> session = new AtomicReference<>(null);
     private final int retryTimes;
 
-    public ActiveMQSessionPool(JsonObject config) {
+    public ActiveMQSessionPool(ActiveMQOptions options) {
 
-        this.config = config;
-
-        Integer retryTimes = config.getInteger(ActiveMQClientConfigKey.RETRY_TIMES.value());
-        this.retryTimes =  (retryTimes == null || retryTimes < 1)? 5 : retryTimes;
-
-        this.connectionFactory = new ActiveMQConnectionFactory(
-                        config.getString(ActiveMQClientConfigKey.USERNAME.value()),
-                        config.getString(ActiveMQClientConfigKey.PASSWORD.value()),
-                        config.getString(ActiveMQClientConfigKey.BROKER_URL.value())
-        );
+        this.options = options;
+        this.retryTimes =  options.getRetryTimes() < 1 ? 5 : options.getRetryTimes();
+        this.connectionFactory = new ActiveMQConnectionFactory(options.getUsername(),options.getPassword(),options.getBroker());
         Connection connection;
 
         try {
             connection = connectionFactory.createConnection();
-            String clientID = config.getString(ActiveMQClientConfigKey.CLIENT_ID.value());
-            connection.setClientID(clientID==null?"vertx-activemq-client:"+ LocalDateTime.now():clientID);
+            connection.setClientID(options.getClientId()==null?"vertx-activemq-client:"+ LocalDateTime.now():options.getClientId());
             connection.start();
             this.connection.set(connection);
             createSession();
-            logger.info("ActiveMQ连接成功,broker=" + config.getString(ActiveMQClientConfigKey.BROKER_URL.value()));
+            logger.info("ActiveMQ连接成功, connection = " + connection);
         } catch (JMSException e) {
             reConnect();
         }
     }
 
     private void reConnect(){
-        logger.warn("创建ActiveMQ连接失败,broker=" + config.getString(ActiveMQClientConfigKey.BROKER_URL.value()) + ", 尝试重新连接");
+        logger.warn("创建ActiveMQ连接失败, broker = " + options.getBroker() + ", 尝试重新连接");
         Semaphore access = new Semaphore(this.retryTimes);
         while (true){
             if (access.tryAcquire()){
                 try {
                     Connection oldConnection = this.connection.get();
                     Connection newConnection = this.connectionFactory.createConnection();
-                    String clientID = config.getString(ActiveMQClientConfigKey.CLIENT_ID.value());
-                    newConnection.setClientID(clientID==null?"vertx-activemq-client:"+ LocalDateTime.now():clientID);
+                    newConnection.setClientID(options.getClientId()==null?"vertx-activemq-client:"+ LocalDateTime.now():options.getClientId());
                     newConnection.start();
                     if(this.connection.compareAndSet(oldConnection,newConnection)){
                         //当前线程重连成功，更新session
@@ -76,7 +67,7 @@ public class ActiveMQSessionPool {
                     //ignore the exception and continue the loop
                 }
             }else {
-                throw new IllegalStateException("ActiveMQ重连失败,broker=" + config.getString(ActiveMQClientConfigKey.BROKER_URL.value()) + "，请检查配置或者服务器");
+                throw new IllegalStateException("ActiveMQ重连失败, broker = " + options.getBroker() + "，请检查配置或者服务器");
             }
         }
     }
@@ -90,10 +81,10 @@ public class ActiveMQSessionPool {
 
     private void createSession(){
         try {
-            Session session = connection.get().createSession(false,Session.AUTO_ACKNOWLEDGE);
+            Session session = connection.get().createSession(options.isTransacted(),options.getAcknowledgeMode());
             this.session.set(session);
         } catch (JMSException e) {
-            throw new IllegalArgumentException("failed creating session of connection:" + connection);
+            throw new IllegalArgumentException("ActiveMQ session 创建失败， connection = " + connection);
         }
     }
 }

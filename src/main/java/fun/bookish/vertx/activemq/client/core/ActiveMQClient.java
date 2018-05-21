@@ -1,5 +1,6 @@
 package fun.bookish.vertx.activemq.client.core;
 
+import fun.bookish.vertx.activemq.client.config.ActiveMQOptions;
 import fun.bookish.vertx.activemq.client.consumer.ActiveMQConsumer;
 import fun.bookish.vertx.activemq.client.producer.ActiveMQProducer;
 import fun.bookish.vertx.activemq.client.subscriber.ActiveMQSubscriber;
@@ -9,17 +10,17 @@ import io.vertx.core.json.JsonObject;
 
 public interface ActiveMQClient {
 
-    static ActiveMQClient create(Vertx vertx, JsonObject config){
-        if(config.getString("username") == null){
-            throw new IllegalArgumentException("username can not be null");
+    static ActiveMQClient create(Vertx vertx, ActiveMQOptions options){
+        if(options.getUsername() == null){
+            throw new IllegalArgumentException("username不能为null");
         }
-        if(config.getString("password") == null){
-            throw new IllegalArgumentException("password can not be null");
+        if(options.getPassword() == null){
+            throw new IllegalArgumentException("password不能为null");
         }
-        if(config.getString("brokerURL") == null){
-            throw new IllegalArgumentException("brokerURL can not be null");
+        if(options.getBroker() == null){
+            throw new IllegalArgumentException("broker不能为null");
         }
-        return new ActiveMQClientImpl(vertx,config);
+        return new ActiveMQClientImpl(vertx,options);
     }
 
     ActiveMQConsumer createConsumer(String key, String destination);
