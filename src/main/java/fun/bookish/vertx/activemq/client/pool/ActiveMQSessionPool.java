@@ -3,6 +3,9 @@ package fun.bookish.vertx.activemq.client.pool;
 
 
 import fun.bookish.vertx.activemq.client.config.ActiveMQOptions;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
@@ -42,6 +45,26 @@ public class ActiveMQSessionPool {
             logger.info("ActiveMQ连接成功, connection = " + connection);
         } catch (JMSException e) {
             reConnect();
+        }
+    }
+
+    public ActiveMQSessionPool(ActiveMQOptions options, Handler<AsyncResult<Void>> handler) {
+
+        this.options = options;
+        this.retryTimes =  options.getRetryTimes() < 1 ? 5 : options.getRetryTimes();
+        this.connectionFactory = new ActiveMQConnectionFactory(options.getUsername(),options.getPassword(),options.getBroker());
+        Connection connection;
+
+        try {
+            connection = connectionFactory.createConnection();
+            connection.setClientID(options.getClientId()==null?"vertx-activemq-client:"+ LocalDateTime.now():options.getClientId());
+            connection.start();
+            this.connection.set(connection);
+            createSession();
+            logger.info("ActiveMQ连接成功, connection = " + connection);
+            handler.handle(Future.succeededFuture());
+        } catch (JMSException e) {
+            handler.handle(Future.failedFuture(e));
         }
     }
 

@@ -4,6 +4,8 @@ import fun.bookish.vertx.activemq.client.config.ActiveMQOptions;
 import fun.bookish.vertx.activemq.client.consumer.ActiveMQConsumer;
 import fun.bookish.vertx.activemq.client.producer.ActiveMQProducer;
 import fun.bookish.vertx.activemq.client.subscriber.ActiveMQSubscriber;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
@@ -22,6 +24,20 @@ public interface ActiveMQClient {
         }
         return new ActiveMQClientImpl(vertx,options);
     }
+
+    static ActiveMQClient create(Vertx vertx, ActiveMQOptions options, Handler<AsyncResult<Void>> handler){
+        if(options.getUsername() == null){
+            throw new IllegalArgumentException("username不能为null");
+        }
+        if(options.getPassword() == null){
+            throw new IllegalArgumentException("password不能为null");
+        }
+        if(options.getBroker() == null){
+            throw new IllegalArgumentException("broker不能为null");
+        }
+        return new ActiveMQClientImpl(vertx,options,handler);
+    }
+
 
     ActiveMQConsumer createConsumer(String key, String destination);
 

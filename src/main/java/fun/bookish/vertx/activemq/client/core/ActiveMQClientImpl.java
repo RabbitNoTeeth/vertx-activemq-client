@@ -9,6 +9,8 @@ import fun.bookish.vertx.activemq.client.producer.ActiveMQProducer;
 import fun.bookish.vertx.activemq.client.producer.ActiveMQProducerImpl;
 import fun.bookish.vertx.activemq.client.subscriber.ActiveMQSubscriber;
 import fun.bookish.vertx.activemq.client.subscriber.ActiveMQSubscriberImpl;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 
 
@@ -22,6 +24,13 @@ public class ActiveMQClientImpl implements ActiveMQClient {
     ActiveMQClientImpl(Vertx vertx,ActiveMQOptions options){
         this.vertx = vertx;
         this.sessionPool = new ActiveMQSessionPool(options);
+        this.cacheManager = new ActiveMQCacheManager();
+        this.vertx.getOrCreateContext().put(ActiveMQClientImpl.class.getTypeName(),this);
+    }
+
+    ActiveMQClientImpl(Vertx vertx,ActiveMQOptions options, Handler<AsyncResult<Void>> handler){
+        this.vertx = vertx;
+        this.sessionPool = new ActiveMQSessionPool(options, handler);
         this.cacheManager = new ActiveMQCacheManager();
         this.vertx.getOrCreateContext().put(ActiveMQClientImpl.class.getTypeName(),this);
     }
